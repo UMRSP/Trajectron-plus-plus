@@ -27,7 +27,7 @@ else:
         # If you have CUDA_VISIBLE_DEVICES set, which you should,
         # then this will prevent leftover flag arguments from
         # messing with the device allocation.
-        args.device = 'cuda:0'
+        torch.cuda.set_device(args.device)
 
     args.device = torch.device(args.device)
 
@@ -101,8 +101,8 @@ def main():
         with open(os.path.join(model_dir, 'config.json'), 'w') as conf_json:
             json.dump(hyperparams, conf_json)
 
-        log_writer = SummaryWriter(log_dir=model_dir)
-
+        # log_writer = SummaryWriter(log_dir=model_dir)
+        log_writer = SummaryWriter(log_dir=model_dir, flush_secs=10)
     # Load training and evaluation environments and scenes
     train_scenes = []
     train_data_path = os.path.join(args.data_dir, args.train_data_dict)
@@ -137,7 +137,7 @@ def main():
 
         node_type_dataloader = utils.data.DataLoader(node_type_data_set,
                                                      collate_fn=collate,
-                                                     pin_memory=False if args.device is 'cpu' else True,
+                                                     pin_memory=False if args.device == 'cpu' else True,
                                                      batch_size=args.batch_size,
                                                      shuffle=True,
                                                      num_workers=args.preprocess_workers)
@@ -180,7 +180,7 @@ def main():
 
             node_type_dataloader = utils.data.DataLoader(node_type_data_set,
                                                          collate_fn=collate,
-                                                         pin_memory=False if args.eval_device is 'cpu' else True,
+                                                         pin_memory=False if args.eval_device == 'cpu' else True,
                                                          batch_size=args.eval_batch_size,
                                                          shuffle=True,
                                                          num_workers=args.preprocess_workers)
@@ -265,10 +265,11 @@ def main():
 
                 if not args.debug:
                     log_writer.add_scalar(f"{node_type}/train/learning_rate",
-                                          lr_scheduler[node_type].get_lr()[0],
+                                        #   lr_scheduler[node_type].get_lr()[0],
+                                        lr_scheduler[node_type].get_last_lr()[0],
                                           curr_iter)
                     log_writer.add_scalar(f"{node_type}/train/loss", train_loss, curr_iter)
-
+                    log_writer.flush()
                 curr_iter += 1
             curr_iter_node_type[node_type] = curr_iter
         train_dataset.augment = False
