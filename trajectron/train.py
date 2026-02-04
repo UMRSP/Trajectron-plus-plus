@@ -22,22 +22,21 @@ from tensorboardX import SummaryWriter
 import warnings
 warnings.filterwarnings("ignore", message=".*does not define `arg_constraints`.*")
 
-if not torch.cuda.is_available() or args.device == 'cpu':
-    args.device = torch.device('cpu')
+if not torch.cuda.is_available(): 
+    if torch.backends.mps.is_available():
+        args.device = torch.device('mps')  
+    else:
+        args.device = torch.device('cpu')
 else:
     if torch.cuda.device_count() == 1:
         # If you have CUDA_VISIBLE_DEVICES set, which you should,
         # then this will prevent leftover flag arguments from
         # messing with the device allocation.
         torch.cuda.set_device(args.device)
-
-    args.device = torch.device(args.device)
+args.device = torch.device(args.device)
 
 if args.eval_device is None:
     args.eval_device = torch.device('cpu')
-
-# This is needed for memory pinning using a DataLoader (otherwise memory is pinned to cuda:0 by default)
-torch.cuda.set_device(args.device)
 
 if args.seed is not None:
     random.seed(args.seed)
