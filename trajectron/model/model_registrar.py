@@ -65,7 +65,7 @@ class ModelRegistrar(nn.Module):
 
         print('')
         print('Loading from ' + save_path)
-        self.model_dict = torch.load(save_path, map_location=self.device)
+        self.model_dict = torch.load(save_path, map_location=self.device,weights_only=False)
         print('Loaded!')
         print('')
 
